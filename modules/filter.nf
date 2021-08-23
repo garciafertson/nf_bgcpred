@@ -5,7 +5,7 @@ process filterbysize{
   memory '6GB'
   cpus '1'
   time '30m'
-  module 'SeqKit'
+  module 'bioinfo-tools:SeqKit'
 
   input:
     path(fasta)
