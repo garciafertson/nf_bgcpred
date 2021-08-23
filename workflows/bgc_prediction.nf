@@ -11,7 +11,7 @@ include {deepbgc}		from  "../modules/bgc"
 
 workflow BGCPRED {
 	folder=params.contig_folder
-	fasta=Channel.fromPath(["${folder}/*contig.fa", "${folder}/*.fasta", "${folder}/*.fna"])
+	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
         deepbgc(longcontigs)
