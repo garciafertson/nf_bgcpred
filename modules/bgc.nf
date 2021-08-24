@@ -28,7 +28,7 @@ process deepbgc_detect{
   publishDir "deepbgc"
 
   input:
-    tuple val(x), path(pfamcsv)
+    tuple val(x), path(pfamgbk)
   output:
     tuple val(x), path("${x}/*.gbk"), emit: bgc_gbk
   script:
@@ -39,6 +39,6 @@ process deepbgc_detect{
     	--output ${x} \\
       --label deepbgc_80_score \\
       --score 0.8 \\
-      ${pfamcsv}
+      ${pfamgbk}
     """
 }
