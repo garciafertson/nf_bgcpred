@@ -1,11 +1,11 @@
 
 process filterbysize{
   //set directives to control
+  module "bioinfo-tools: SeqKit"
   scratch true
   memory '6GB'
   cpus '1'
   time '30m'
-  module 'bioinfo-tools:SeqKit'
 
   input:
     path(fasta)

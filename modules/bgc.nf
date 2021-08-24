@@ -1,7 +1,7 @@
 process deepbgc{
   scratch true
-  cpus "8"
-  time '6h'
+  cpus 2 
+  time '18h'
   container 'quay.io/biocontainers/deepbgc:0.1.27--pyhdfd78af_0'
   publishDir "deepbgc"
 
