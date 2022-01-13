@@ -1,15 +1,17 @@
 process deepbgc_prepare{
   scratch=true
   cpus 2
-  time '12h'
   container 'quay.io/biocontainers/deepbgc:0.1.27--pyhdfd78af_0'
-  publishDir "bgcprepare"
+  publishDir "deepbgc/prepare"
+  time   = { 30.h  * task.attempt }
+  errorStrategy = 'retry'
+  maxRetries = 2
 
   input:
     tuple val(x), path(fasta)
   output:
-    tuple val(x), path("${x}.csv"), emit: pfamcsv
-    tuple val(x), path("${x}_full.gbk"), emit: gbk
+    tuple val(x), path("${x}.csv"), emit: pfamcsv, optional: true
+    tuple val(x), path("${x}_full.gbk"), emit: gbk, optional: true
   script:
     """
     deepbgc prepare \\
@@ -25,20 +27,25 @@ process deepbgc_detect{
   cpus 1
   time '2h'
   container 'quay.io/biocontainers/deepbgc:0.1.27--pyhdfd78af_0'
-  publishDir "deepbgc"
+  publishDir "deepbgc",
+    mode: "copy",
+    overwrite: true
+  errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
+  //validExitStatus 0,1
 
   input:
     tuple val(x), path(pfamgbk)
   output:
-    tuple val(x), path("${x}/*.gbk"), emit: bgc_gbk
+    tuple val(x), path("${x}/*.bgc.gbk"), optional:true, emit: bgcgbk
+    path("${x}/*.bgc.tsv"), optional:true, emit: tsv
+    path("${x}/*.json"), optional:true,   emit: json
   script:
 
     """
     deepbgc pipeline \\
-    	--minimal-output \\
     	--output ${x} \\
-      --label deepbgc_80_score \\
-      --score 0.8 \\
-      ${pfamgbk}
+      	--label deepbgc_80_score \\
+      	--score 0.8 \\
+      	${pfamgbk}
     """
 }

@@ -3,7 +3,7 @@ process filterbysize{
   //set directives to control
   module "bioinfo-tools: SeqKit"
   scratch true
-  memory '6GB'
+  // memory '6GB'
   cpus '1'
   time '30m'
 
