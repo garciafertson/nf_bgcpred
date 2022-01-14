@@ -8,8 +8,8 @@ process deepbgc_prepare{
   input:
     tuple val(x), path(fasta)
   output:
-    tuple val(x), path("${x}.csv"), emit: pfamcsv
-    tuple val(x), path("${x}_full.gbk"), emit: gbk
+    tuple val(x), path("${x}.csv"), emit: pfamcsv, optional: true
+    tuple val(x), path("${x}_full.gbk" ), emit: gbk, optional: true
   script:
     """
     deepbgc prepare \\
@@ -30,15 +30,16 @@ process deepbgc_detect{
   input:
     tuple val(x), path(pfamgbk)
   output:
-    tuple val(x), path("${x}/*.gbk"), emit: bgc_gbk
+    tuple val(x), path("${x}/*.bgc.gbk"), emit: bgc_gbk, optional:true
+    tuple val(x), path("${x}/*.bgc.tsv"), emit: bgc_tsv optional:true
   script:
 
     """
     deepbgc pipeline \\
-    	--minimal-output \\
     	--output ${x} \\
       --label deepbgc_80_score \\
       --score 0.8 \\
+      --min-proteins 2 \\
       ${pfamgbk}
     """
 }

@@ -6,6 +6,7 @@ General workflow, Take contigs as input and output bgcprediction fasta/gbk
 include {filterbysize}			from  "../modules/filter"
 include {deepbgc_prepare} 	from	"../modules/bgc"
 include	{deepbgc_detect}		from  "../modules/bgc"
+include {splitgbk}					from	"../modules/bgcgbk"
 //include {antismash}		from  "../modules/bgc"
 
 //run metagenomic assembly pipeline using megahit
@@ -16,8 +17,12 @@ workflow BGCPRED {
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
   deepbgc_prepare(longcontigs)
-	contig_pfamgbk=deepbgc.out.gbk
-	deepbgc_detect(contig_pfamgbk)
+	contig_gbk=deepbgc_prepare.out.gbk
+	filter_pfamgbk(contig_gbk)
+	gbk=filter_pfamgbk.out.pf_gbk
+	deepbgc_detect(gbk)
+	pred_bgcgbk=deepbgc_detect.out.bgc_gbk
+	//splitgbk(pred_bgcgbk)
 
 	//antismash(fnafilt)
         }
