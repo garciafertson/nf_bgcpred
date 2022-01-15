@@ -4,6 +4,7 @@ General workflow, Take contigs as input and output bgcprediction fasta/gbk
 
 //import modules
 include {filterbysize}			from  "../modules/filter"
+include {filter_pfamgbk}		from 	"../modules/filter"
 include {deepbgc_prepare} 	from	"../modules/bgc"
 include	{deepbgc_detect}		from  "../modules/bgc"
 include {splitgbk}					from	"../modules/bgcgbk"

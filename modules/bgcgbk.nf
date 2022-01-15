@@ -9,7 +9,6 @@ process splitgbk{
   output:
     tuple val(x), path("*.gbk" ), emit: bgcgbk
   script:
-
     """
     splitgbk $gbk
     rm $gbk

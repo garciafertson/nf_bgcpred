@@ -11,11 +11,7 @@ process deepbgc_prepare{
     tuple val(x), path(fasta)
   output:
     tuple val(x), path("${x}.csv"), emit: pfamcsv, optional: true
-<<<<<<< HEAD
-    tuple val(x), path("${x}_full.gbk" ), emit: gbk, optional: true
-=======
     tuple val(x), path("${x}_full.gbk"), emit: gbk, optional: true
->>>>>>> 8b1d6080c0b97f8e668c9f10affa1b3b41ece644
   script:
     """
     deepbgc prepare \\
@@ -40,28 +36,17 @@ process deepbgc_detect{
   input:
     tuple val(x), path(pfamgbk)
   output:
-<<<<<<< HEAD
-    tuple val(x), path("${x}/*.bgc.gbk"), emit: bgc_gbk, optional:true
-    tuple val(x), path("${x}/*.bgc.tsv"), emit: bgc_tsv optional:true
-=======
     tuple val(x), path("${x}/*.bgc.gbk"), optional:true, emit: bgcgbk
     path("${x}/*.bgc.tsv"), optional:true, emit: tsv
     path("${x}/*.json"), optional:true,   emit: json
->>>>>>> 8b1d6080c0b97f8e668c9f10affa1b3b41ece644
   script:
 
     """
     deepbgc pipeline \\
     	--output ${x} \\
-<<<<<<< HEAD
       --label deepbgc_80_score \\
       --score 0.8 \\
       --min-proteins 2 \\
       ${pfamgbk}
-=======
-      	--label deepbgc_80_score \\
-      	--score 0.8 \\
-      	${pfamgbk}
->>>>>>> 8b1d6080c0b97f8e668c9f10affa1b3b41ece644
     """
 }
