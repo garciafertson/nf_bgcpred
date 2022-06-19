@@ -17,12 +17,12 @@ workflow BGCPRED {
 	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
-  deepbgc_prepare(longcontigs)
+        deepbgc_prepare(longcontigs)
 	contig_gbk=deepbgc_prepare.out.gbk
 	filter_pfamgbk(contig_gbk)
 	gbk=filter_pfamgbk.out.pf_gbk
 	deepbgc_detect(gbk)
-	pred_bgcgbk=deepbgc_detect.out.bgc_gbk
+	//pred_bgcgbk=deepbgc_detect.out.bgc_gbk
 	//splitgbk(pred_bgcgbk)
 
 	//antismash(fnafilt)

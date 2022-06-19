@@ -30,8 +30,11 @@ process filterbysize{
 
 process filter_pfamgbk{
   //set directives
-  scratch true
-  memory'1G'
+  container "biopython/biopython:latest"
+  //module "python3"
+  //conda "conda-forge::python=3.6.7 conda-forge::biopython=1.74"
+  errorStrategy {task.exitStatus in 1 ? 'ignore': 'retry'}
+  maxRetries = 3
   cpus '1'
   time '10m'
 
