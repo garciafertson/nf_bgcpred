@@ -1,8 +1,9 @@
 
 process filterbysize{
   //set directives to control
-  module "bioinfo-tools: SeqKit"
+  //module "bioinfo-tools: SeqKit"
   scratch true
+  container  "quay.io/biocontainers/seqkit"
   // memory '6GB'
   cpus '1'
   time '30m'
@@ -28,10 +29,10 @@ process filterbysize{
   """
 }
 
+//the module filters out gbk files with no predicted pfams into it
 process filter_pfamgbk{
   //set directives
   scratch true
-  memory'1G'
   cpus '1'
   time '10m'
 
@@ -43,5 +44,34 @@ process filter_pfamgbk{
   script:
   """
   pfamfilt_gbk.py ${gbk} ${x}.full_pf.gbk
+  """
+}
+
+//The module takes a contig file, checks the file size and divides
+//it by 70MB, returns the estimated number of files.
+process splitbysize{
+  //set directives
+  container 'quay.io/biocontainers/pyfasta'
+  scratch true
+  cpus '1'
+  time '15m'
+
+  input:
+  tuple val(x), path(contig)
+  output:
+  path("*.fasta"), emit: contigs
+
+  script:
+  """
+  filename=${contigs}
+  filesize=\$(stat -c%s "\$filename")
+  float=calc \$filesize/6000000
+  int=\${float%.*}
+  if ((int > 1));
+    then
+    pyfasta split -n \$int ${contigs}
+    else
+    cat ${contigs} > ${x}.1.fasta
+  fi
   """
 }
