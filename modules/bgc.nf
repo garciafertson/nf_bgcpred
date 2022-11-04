@@ -3,7 +3,8 @@ process deepbgc_prepare{
   cpus 2
   container 'quay.io/biocontainers/deepbgc:0.1.27--pyhdfd78af_0'
   publishDir "deepbgc/prepare"
-  time   = { 30.h  * task.attempt }
+  //time   = { 35.h  * task.attempt }
+  time=36.h
   errorStrategy = 'retry'
   maxRetries = 2
 
@@ -30,7 +31,8 @@ process deepbgc_detect{
   publishDir "deepbgc",
     mode: "copy",
     overwrite: true
-  errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
+  errorStrategy {task.exitStatus in 1 ? 'ignore': 'retry'}
+  maxRetries = 3
   //validExitStatus 0,1
 
   input:

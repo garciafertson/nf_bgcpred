@@ -108,6 +108,5 @@ workflow BGCPRED {
 	// Increase cutoff value for all predictors,
 	// Create genome bed file for contigs file
 	// P
-
 	//antismash(fnafilt)
         }

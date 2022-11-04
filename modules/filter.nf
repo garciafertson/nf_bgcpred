@@ -32,7 +32,11 @@ process filterbysize{
 //the module filters out gbk files with no predicted pfams into it
 process filter_pfamgbk{
   //set directives
-  scratch true
+  container "biopython/biopython:latest"
+  //module "python3"
+  //conda "conda-forge::python=3.6.7 conda-forge::biopython=1.74"
+  errorStrategy {task.exitStatus in 1 ? 'ignore': 'retry'}
+  maxRetries = 3
   cpus '1'
   time '10m'
 
