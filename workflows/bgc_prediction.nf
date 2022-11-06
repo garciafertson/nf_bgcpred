@@ -21,7 +21,7 @@ workflow BGCPRED {
 	longcontigs=filterbysize.out.contigs
 
 	// Derreplicate contig sequences MASH,
-	derrep(loncontigs)
+	derrep(longcontigs)
 	derrepcontigs= derrep.out.contigs
 
 	// Split large contig files into many files ~40MB
