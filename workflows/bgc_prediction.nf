@@ -8,7 +8,9 @@ include {filter_pfamgbk}		from 	"../modules/filter"
 include {deepbgc_prepare} 	from	"../modules/bgc"
 include	{deepbgc_detect}		from  "../modules/bgc"
 include {splitgbk}					from	"../modules/bgcgbk"
-//include {antismash}		from  "../modules/bgc"
+include {runsanntis}				from  "../modules/bgc"
+include {runantismash}			from  "../modules/bgc"
+include {rungecco}					from  "../modules/bgc"
 
 //run metagenomic assembly pipeline using megahit
 
@@ -30,17 +32,16 @@ workflow BGCPRED {
 
 	runantismash(bysizecontigs)
 	gbk_as=runantismash.out.gbk
-	as2bed(gbk_as)
-	bed_as=runantismash.out.bed
+	//as2bed(gbk_as)
+	//bed_as=runantismash.out.bed
 
 	if(params.sanntis){
 		runsanntis(bysizecontigs) //remove predictions on edges
-		gcf_sn=runsanntis.out.gcf
-		bed_sn=runsanntis.out.bed
-		fasta_sn=runsanntis.out.fasta //convert
-		gcf2gbk(gcf_sn, fasta_sn)
-		gbk_sn=gcf2gbk.out.gbk //convert into gbk and reformat for BigSCAPE
-
+		gff_sn=runsanntis.out.gff
+		//bed_sn=runsanntis.out.bed
+		//fasta_sn=runsanntis.out.fasta //convert
+		//gff2gbk(gff_sn, fasta_sn)
+		//gbk_sn=gcf2gbk.out.gbk //convert into gbk and reformat for BigSCAPE
 		//bedops workflow, receive bedfiles with gbk names, and genbank files
 		//return gbkfiles in antismash format, return all antismash gbks
 		//remove gkb from second bed intersecting, return in separate folder
@@ -51,9 +52,7 @@ workflow BGCPRED {
 		//keep gbk predicted with second sofware and not intersecting, save
 		// second software folder, rename gbk with 'second software' prefix
 		// incremental addition of the next bgc predictors
-
-		bedops(bed_as, bed_sn)
-
+		//bedops(bed_as, bed_sn)
 	}
 
 	if(params.gecco){
@@ -61,9 +60,9 @@ workflow BGCPRED {
 		rungecco(bysizecontigs) //remove predictions on edges
 		gbk_g1=rungecco.out.gbk
 		tsv_gc=rungecco.out.tsv
-		bgc_gc=
-		reformatgbk(gbk_g1)
-		gbk_gc=reformatgbk.out.gbk	//reformat for BiGSCAPE
+		//bgc_gc=
+		//reformatgbk(gbk_g1)
+		//gbk_gc=reformatgbk.out.gbk	//reformat for BiGSCAPE
 	}
 
 	if(params.deepbgc){
@@ -74,8 +73,8 @@ workflow BGCPRED {
  		deepbgc_detect(gbk)
 		pred_bgcgbk=deepbgc_detect.out.bgc_gbk
 		//reformat into Antishmash format
-		reformatgbk(pred_bgcgbk)
-		gbk_dp=regormatgbk.out.gbk
+		//reformatgbk(pred_bgcgbk)
+		//gbk_dp=regormatgbk.out.gbk
   }
 
 	//transform into fasta, mash95, mcl
@@ -91,7 +90,6 @@ workflow BGCPRED {
 	// 1 - all AS predictions
 	// 2 - only intersections with other predictiors >1
 	// 3 - only very high scoring predicions single predictor
-
 
 	// convert gbk to fasta for each gbk in contig file,
 	// work with list of individual files gbk or fasta.

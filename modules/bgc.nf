@@ -3,8 +3,7 @@ process deepbgc_prepare{
   cpus 2
   container 'quay.io/biocontainers/deepbgc:0.1.27--pyhdfd78af_0'
   publishDir "deepbgc/prepare"
-  //time   = { 35.h  * task.attempt }
-  time=36.h
+  time   = { 30.h  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
 
@@ -24,15 +23,12 @@ process deepbgc_prepare{
 }
 
 process deepbgc_detect{
-  scratch true
+  //scratch true
   cpus 1
   time '2h'
   container 'quay.io/biocontainers/deepbgc:0.1.27--pyhdfd78af_0'
-  publishDir "deepbgc",
-    mode: "copy",
-    overwrite: true
-  errorStrategy {task.exitStatus in 1 ? 'ignore': 'retry'}
-  maxRetries = 3
+  publishDir "out/deepbgc"
+  errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
   //validExitStatus 0,1
 
   input:
@@ -40,7 +36,6 @@ process deepbgc_detect{
   output:
     tuple val(x), path("${x}/*.bgc.gbk"), optional:true, emit: bgc_gbk
     path("${x}/*.bgc.tsv"), optional:true, emit: tsv
-    path("${x}/*.json"), optional:true,   emit: json
 
   script:
     """
@@ -54,13 +49,15 @@ process deepbgc_detect{
 }
 
 process runantismash {
-  scratch true
+  //scratch true
   cpus 2
   time '10h'
   container 'antismash/standalone-nonfree:6.1.1'
-  publishDir "bgc_predicition/antismash",
+  publishDir "out/antismash",
     mode:"copy",
     overwrite: true
+  errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
+  //validExitStatus 0,1
 
   input:
   tuple val(x), path(contigs)
@@ -79,12 +76,14 @@ process runantismash {
 //--cb-subclusters \\
 //--smcog-trees \\
 
-
 process rungecco {
-    scratch true
+    //scratch true
     cpus 2
     time '10h'
     container 'skash/gecco-0.6.3:latest'
+    errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
+    publishDir "out/gecco"
+    //validExitStatus 0,1
 
     input:
     tuple val(x), path(contigs)
@@ -101,11 +100,16 @@ process rungecco {
     """
 }
 
+
 process runsanntis {
-    scratch true
+    //scratch true
     cpus 1
     time '10h'
     container 'quay.io/repository/microbiome-informatics/sanntis'
+    errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
+    //valifExitStatus 0,1
+    publishDir "out/deepbgc"
+
     input:
     tuple val(x), path(contigs)
     output:
@@ -117,6 +121,4 @@ process runsanntis {
     """
     sanntis ${contigs}
     """
-
-
 }
