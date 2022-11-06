@@ -16,12 +16,12 @@ include {rungecco}					from  "../modules/bgc"
 
 workflow BGCPRED {
 	folder=params.contig_folder
-	fasta=Channel.fromPa th(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
+	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
 
 	// Derreplicate contig sequences MASH,
-	derrep(loncontigs)
+	derrep(longcontigs)
 	derrepcontigs= derrep.out.contigs
 
 	// Split large contig files into many files ~40MB
