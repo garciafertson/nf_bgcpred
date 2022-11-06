@@ -20,12 +20,8 @@ workflow BGCPRED {
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
 
-	// Derreplicate contig sequences MASH,
-	derrep(longcontigs)
-	derrepcontigs= derrep.out.contigs
-
 	// Split large contig files into many files ~40MB
-	splitbysize(derrepcontigs)
+	splitbysize(longcontigs)
 	bysizecontigs=splitbysize.out.contigs
 	genome_bed(bysizecontigs)
 	// Bedfiles chomosome name, start, end, feature name
