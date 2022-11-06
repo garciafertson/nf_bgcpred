@@ -69,7 +69,7 @@ process splitbysize{
   """
   filename=${contigs}
   filesize=\$(stat -c%s "\$filename")
-  float=calc \$filesize/6000000
+  float=calc \$filesize/10000000
   int=\${float%.*}
   if ((int > 1));
     then
