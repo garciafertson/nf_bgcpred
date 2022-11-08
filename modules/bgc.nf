@@ -1,7 +1,7 @@
 process deepbgc_prepare{
   scratch=true
   cpus 2
-  container 'quay.io/biocontainers/deepbgc:0.1.27--pyhdfd78af_0'
+  container 'quay.io/biocontainers/deepbgc:0.1.30--pyhca03a8a_2'
   publishDir "deepbgc/prepare"
   time   = { 30.h  * task.attempt }
   errorStrategy = 'retry'
@@ -26,7 +26,7 @@ process deepbgc_detect{
   //scratch true
   cpus 1
   time '2h'
-  container 'quay.io/biocontainers/deepbgc:0.1.27--pyhdfd78af_0'
+  container 'quay.io/biocontainers/deepbgc:0.1.30--pyhca03a8a_2'
   publishDir "out/deepbgc"
   errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
   //validExitStatus 0,1
@@ -69,12 +69,10 @@ process runantismash {
   antismash --cb-general \\
   --cb-knownclusters \\
   --asf \\
-  --pfam2go \\
+  --genefinding-tool prodigal-m \\
   ${contigs}
   """
 }
-//--cb-subclusters \\
-//--smcog-trees \\
 
 process rungecco {
     //scratch true
@@ -89,6 +87,7 @@ process rungecco {
     tuple val(x), path(contigs)
     output:
     tuple val(x), path("${x}/*.gbk"), optional: true, emit: gbk
+    tuple val(x), path("${x}/*.tsv"), optional: true, emit: tsv
     //recover and analize clusters.tsv snd create bed in relation to conitgs(genome) file
 
     script:
@@ -105,7 +104,7 @@ process runsanntis {
     //scratch true
     cpus 1
     time '10h'
-    container 'quay.io/repository/microbiome-informatics/sanntis'
+    container 'sysbiojfgg/sanntis:v0.1'
     errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
     //valifExitStatus 0,1
     publishDir "out/deepbgc"
@@ -119,6 +118,6 @@ process runsanntis {
 
     script:
     """
-    sanntis ${contigs}
+    emeraldbgc ${contigs}
     """
 }

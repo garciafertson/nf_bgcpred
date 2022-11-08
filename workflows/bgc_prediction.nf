@@ -20,11 +20,8 @@ workflow BGCPRED {
 	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
-
-	// Split large contig files into many files ~40MB
-	splitbysize(longcontigs)
-	bysizecontigs=splitbysize.out.contigs
-	genome_bed(bysizecontigs)
+	bysizecontigs=longcontigs.splitFasta(size: "100.MB" ,file:true)
+	// Split large contig file into ~100 MB files
 	// Bedfiles chomosome name, start, end, feature name
 
 	runantismash(bysizecontigs)

@@ -3,7 +3,7 @@ process filterbysize{
   //set directives to control
   //module "bioinfo-tools: SeqKit"
   scratch true
-  container  "quay.io/biocontainers/seqkit"
+  container  "quay.io/biocontainers/seqkit:0.15.0--0"
   // memory '6GB'
   cpus '1'
   time '30m'
@@ -55,15 +55,15 @@ process filter_pfamgbk{
 //it by 70MB, returns the estimated number of files.
 process splitbysize{
   //set directives
-  container 'quay.io/biocontainers/pyfasta'
+  container 'quay.io/biocontainers/pyfasta:0.5.2--py_1'
   scratch true
   cpus '1'
   time '15m'
 
   input:
-  tuple val(x), path(contig)
+  tuple val(x), path(contigs)
   output:
-  path("*.fasta"), emit: contigs
+  tuple val(x),path("*.fasta"), emit: contigs
 
   script:
   """
