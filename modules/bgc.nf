@@ -102,9 +102,9 @@ process rungecco {
 
 process runsanntis {
     //scratch true
-    cpus 1
+    cpus 2
     time '10h'
-    container 'sysbiojfgg/sanntis:v0.1'
+    container 'sysbiojfgg/sanntis:v0.1.4'
     errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
     //valifExitStatus 0,1
     publishDir "out/deepbgc"
@@ -118,6 +118,13 @@ process runsanntis {
 
     script:
     """
-    emeraldbgc ${contigs}
+    sanntis --cpu $task.cpus \\
+    --antismash_output True \\
+    ${contigs}
     """
-}
+    //sannti searches for conda enviroment, set enviromental variable to 'base'
+    //interproscan database, test if folder is integrated into filsystem ls /opt/interproscan/data
+    //error using interproscan  hmm_file = preprocess.process_sequence()
+    //runInterproscan os.environ['LD_LIBRARY_PATH'] = os.path.join(os.environ["CONDA_PREFIX"], "lib")
+    //CONDA_PREFIX key error
+    }

@@ -24,27 +24,21 @@ workflow BGCPRED {
 	// Split large contig file into ~100 MB files
 	// Bedfiles chomosome name, start, end, feature name
 
-	runantismash(bysizecontigs)
-	gbk_as=runantismash.out.gbk
-	//as2bed(gbk_as)
-	//bed_as=runantismash.out.bed
+	if(params.antismash){
+		runantismash(bysizecontigs)
+		gbk_as=runantismash.out.gbk
+		//as2bed(gbk_as)
+		//bed_as=runantismash.out.bed
+	}
 
 	if(params.sanntis){
-		runsanntis(bysizecontigs) //remove predictions on edges
+		runsanntis(bysizecontigs)
 		gff_sn=runsanntis.out.gff
 		//bed_sn=runsanntis.out.bed
 		//fasta_sn=runsanntis.out.fasta //convert
 		//gff2gbk(gff_sn, fasta_sn)
 		//gbk_sn=gcf2gbk.out.gbk //convert into gbk and reformat for BigSCAPE
 		//bedops workflow, receive bedfiles with gbk names, and genbank files
-		//return gbkfiles in antismash format, return all antismash gbks
-		//remove gkb from second bed intersecting, return in separate folder
-		//genebank not in antismash, and for this also table with intersection values
-		// keep bgc predicted with antismash, rename gbk with 'as' prefix
-		// remove bgc predicted with second software intersecting with anitsmash
-		// keep names of intersectoin
-		//keep gbk predicted with second sofware and not intersecting, save
-		// second software folder, rename gbk with 'second software' prefix
 		// incremental addition of the next bgc predictors
 		//bedops(bed_as, bed_sn)
 	}
@@ -60,7 +54,7 @@ workflow BGCPRED {
 	}
 
 	if(params.deepbgc){
-	  deepbgc_prepare(bysizecontigs)
+	  	deepbgc_prepare(bysizecontigs)
 		contig_gbk=deepbgc_prepare.out.gbk
 		filter_pfamgbk(contig_gbk)
 		gbk=filter_pfamgbk.out.pf_gbk
@@ -69,7 +63,7 @@ workflow BGCPRED {
 		//reformat into Antishmash format
 		//reformatgbk(pred_bgcgbk)
 		//gbk_dp=regormatgbk.out.gbk
-  }
+	}
 
 	//transform into fasta, mash95, mcl
 	// prioritize AntismashOutput, longest sequence_length
@@ -101,4 +95,4 @@ workflow BGCPRED {
 	// Create genome bed file for contigs file
 	// P
 	//antismash(fnafilt)
-        }
+}
