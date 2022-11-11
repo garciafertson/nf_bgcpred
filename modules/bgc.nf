@@ -102,29 +102,25 @@ process rungecco {
 
 process runsanntis {
     //scratch true
-    cpus 2
-    time '10h'
+    cpus 1
+    time '2h'
     container 'sysbiojfgg/sanntis:v0.1.4'
     errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
     //valifExitStatus 0,1
     publishDir "out/deepbgc"
 
     input:
-    tuple val(x), path(contigs)
+    tuple val(x), path(gbk), path(ipggf3)
     output:
-    tuple val(x), path("${x}/*.gff"), optional: true, emit: gff
-    tuple val(x), path("${x}/*.faa"), optional: true, emit: faa
+    tuple val(x), path("${x.id}/*.gff"), optional: true, emit: gff
     //recover and analize clusters.tsv snd create bed in relation to conitgs(genome) file
 
     script:
     """
-    sanntis --cpu $task.cpus \\
+    sanntis  \\
+    --ip-file ${ipggf3} \\
     --antismash_output True \\
-    ${contigs}
+    --outdir ${x.id} \\
+    ${gbk}
     """
-    //sannti searches for conda enviroment, set enviromental variable to 'base'
-    //interproscan database, test if folder is integrated into filsystem ls /opt/interproscan/data
-    //error using interproscan  hmm_file = preprocess.process_sequence()
-    //runInterproscan os.environ['LD_LIBRARY_PATH'] = os.path.join(os.environ["CONDA_PREFIX"], "lib")
-    //CONDA_PREFIX key error
     }

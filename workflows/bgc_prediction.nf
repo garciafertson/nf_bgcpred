@@ -12,6 +12,9 @@ include {splitgbk}					from	"../modules/bgcgbk"
 include {runsanntis}				from  "../modules/bgc"
 include {runantismash}			from  "../modules/bgc"
 include {rungecco}					from  "../modules/bgc"
+include {prodigal}					from	"../modules/genepredict"
+include {interproscan}			from	"../modules/genepredict"
+include {sanntisgbk}				from	"../modules/genepredict"
 
 //run metagenomic assembly pipeline using megahit
 
@@ -32,7 +35,15 @@ workflow BGCPRED {
 	}
 
 	if(params.sanntis){
-		runsanntis(bysizecontigs)
+		prodigal(bysizecontigs)
+		genesfaa=prodigal.out.genesfaa
+		intogbk=bysizecontigs.join(genesfaa)
+		sanntisgbk(intogbk)
+		gbk=sanntisgbk.out.gbk
+		interproscan(genesfaa)
+		gff3=interproscan.out.gff3
+		sanntisinput=gfgg3.join(gbk)
+		runsanntis(gff3,gbk)
 		gff_sn=runsanntis.out.gff
 		//bed_sn=runsanntis.out.bed
 		//fasta_sn=runsanntis.out.fasta //convert
