@@ -1,23 +1,20 @@
-process prodigal{
-  //scratch true
-  //memory '6GB'
+process prodigal {
   cpus '1'
   time '4h'
-  container "nanozoo/prodigal:2.6.3--2769024"
+  container 'nanozoo/prodigal:2.6.3--2769024'
+
   input:
-    tuple val(x), path(contig)
+    tuple val(samp_name), path(contig)
   output:
-    //tuple val(x), path("*.genes.fna"), emit: genes
-    tuple val(x), path("*.prodigal.faa") emit: genesfaa
+    tuple val(samp_name), path("*.prodigal.faa"), emit: genesfaa
 
   script:
+    //samp_name=contig.getSimpleName()
     """
     prodigal -i ${contig} \\
-    -a ${x.id}.prodigal.faa \\
+    -a ${samp_name}.prodigal.faa \\
     -p meta
     """
-    //-d ${x.id}.genes.fna \\
-
 }
 
 process interproscan{
@@ -28,7 +25,7 @@ process interproscan{
   input:
     tuple val(x), path(genesfaa)
   output:
-    tuple val(x), path("*.ip.gff3") emit: ipgff3
+    tuple val(x), path("*.ip.gff3"), emit: ipgff3
   script:
   """
   interproscan.sh -i ${genesfaa} \\
@@ -45,9 +42,9 @@ process sanntisgbk{
   container 'sysbiojfgg/sanntis:0.1'
 
   input:
-  tuple val(x), path(genesfaa), path()
+  tuple val(x), path(fna), path(genesfaa)
   output:
-  tuple val(x), fpath("*.faa.gb") emit: genebank
+  tuple val(x), fpath("*.faa.gb"), emit: genebank
   script:
   """
   sanntis_build_gb -n ${fna}

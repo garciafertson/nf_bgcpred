@@ -23,7 +23,8 @@ workflow BGCPRED {
 	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
-	bysizecontigs=longcontigs.splitFasta(size: "100.MB" ,file:true)
+	bysizecontigs=longcontigs.splitFasta(size: "10.MB" ,file:true)
+	bysizecontigs.view()
 	// Split large contig file into ~100 MB files
 	// Bedfiles chomosome name, start, end, feature name
 
@@ -38,6 +39,7 @@ workflow BGCPRED {
 		prodigal(bysizecontigs)
 		genesfaa=prodigal.out.genesfaa
 		intogbk=bysizecontigs.join(genesfaa)
+		intogbk.view()
 		sanntisgbk(intogbk)
 		gbk=sanntisgbk.out.gbk
 		interproscan(genesfaa)
