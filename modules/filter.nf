@@ -11,20 +11,20 @@ process filterbysize{
   input:
     path(fasta)
   output:
-    tuple val(samp_name), path ("${samp_name}.filt.contig.fna") , emit: contigs
+    tuple val(samp_name), path ("${samp_name}.fna") , emit: contigs
 
   script:
   samp_name=fasta.getSimpleName()
 
   """
   seqkit seq \\
-  --min-len 20000  \\
+  --min-len 5000  \\
   ${fasta} > ${samp_name}.filtzise.fna
 
   seqkit replace \\
   --pattern '(^)' \\
   --replacement '${samp_name}_' \\
-  ${samp_name}.filtzise.fna > ${samp_name}.filt.contig.fna
+  ${samp_name}.filtzise.fna > ${samp_name}.fna
 
   """
 }

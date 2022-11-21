@@ -2,8 +2,8 @@ process deepbgc_prepare{
   scratch=true
   cpus 2
   container 'quay.io/biocontainers/deepbgc:0.1.30--pyhca03a8a_2'
-  publishDir "deepbgc/prepare"
-  time   = { 30.h  * task.attempt }
+  // publishDir "deepbgc/prepare"
+  time   = { 20.h  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
 
@@ -86,14 +86,14 @@ process rungecco {
     input:
     tuple val(x), path(contigs)
     output:
-    tuple val(x), path("${x}/*.gbk"), optional: true, emit: gbk
-    tuple val(x), path("${x}/*.tsv"), optional: true, emit: tsv
+    tuple val(x), path("gecco_out/*.gbk"), optional: true, emit: gbk
+    tuple val(x), path("gecco_out/*.tsv"), optional: true, emit: tsv
     //recover and analize clusters.tsv snd create bed in relation to conitgs(genome) file
 
     script:
     """
     gecco run --genome ${contigs} \\
-    -o ${x} \\
+    -o gecco_out \\
     --jobs $task.cpus \\
     --threshold 0.9
     """
@@ -104,23 +104,22 @@ process runsanntis {
     //scratch true
     cpus 1
     time '2h'
-    container 'sysbiojfgg/sanntis:v0.1.4'
+    container 'sysbiojfgg/sanntis:0.1'
     errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
     //valifExitStatus 0,1
-    publishDir "out/deepbgc"
+    publishDir "out/sanntis"
 
     input:
-    tuple val(x), path(gbk), path(ipggf3)
+    tuple val(x), path(tsv), path(gbk)
     output:
-    tuple val(x), path("${x.id}/*.gff"), optional: true, emit: gff
+    tuple val(x), path("${x}*"), optional: true, emit: gff
     //recover and analize clusters.tsv snd create bed in relation to conitgs(genome) file
 
-    script:
+
     """
     sanntis  \\
-    --ip-file ${ipggf3} \\
+    --ip-file ${tsv} \\
     --antismash_output True \\
-    --outdir ${x.id} \\
     ${gbk}
     """
     }

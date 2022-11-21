@@ -17,14 +17,28 @@ include {interproscan}			from	"../modules/genepredict"
 include {sanntisgbk}				from	"../modules/genepredict"
 
 //run metagenomic assembly pipeline using megahit
+process modify_contigid_splitfas {
+input:
+  tuple val(x), path(splitcontig)
+output:
+  tuple val(split_name),  path(splitcontig), emit: splitcontigs
+script:
+  split_name=splitcontig.getName() 
+"""
+echo ${split_name}
+"""
+}
+
+
 
 workflow BGCPRED {
 	folder=params.contig_folder
 	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
-	bysizecontigs=longcontigs.splitFasta(size: "10.MB" ,file:true)
-	bysizecontigs.view()
+	sizecontigs=longcontigs.splitFasta(size: "80.MB" ,file:true)
+	modify_contigid_splitfas(sizecontigs)
+	bysizecontigs=modify_contigid_splitfas.out.splitcontigs
 	// Split large contig file into ~100 MB files
 	// Bedfiles chomosome name, start, end, feature name
 
@@ -39,14 +53,16 @@ workflow BGCPRED {
 		prodigal(bysizecontigs)
 		genesfaa=prodigal.out.genesfaa
 		intogbk=bysizecontigs.join(genesfaa)
-		intogbk.view()
 		sanntisgbk(intogbk)
 		gbk=sanntisgbk.out.gbk
 		interproscan(genesfaa)
-		gff3=interproscan.out.gff3
-		sanntisinput=gfgg3.join(gbk)
-		runsanntis(gff3,gbk)
+		gff3=interproscan.out.iptsv
+		sanntisinput=gff3.join(gbk)
+		sanntisinput.view()
+		runsanntis(sanntisinput)
 		gff_sn=runsanntis.out.gff
+		
+		//runsanntis(bysizecontigs)
 		//bed_sn=runsanntis.out.bed
 		//fasta_sn=runsanntis.out.fasta //convert
 		//gff2gbk(gff_sn, fasta_sn)

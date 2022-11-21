@@ -9,11 +9,11 @@ process prodigal {
     tuple val(samp_name), path("*.prodigal.faa"), emit: genesfaa
 
   script:
-    //samp_name=contig.getSimpleName()
     """
     prodigal -i ${contig} \\
-    -a ${samp_name}.prodigal.faa \\
-    -p meta
+    -a ${samp_name}.faa \\
+    -p metai
+    sed 's/*//' ${samp_name}.faa > ${samp_name}.prodigal.faa
     """
 }
 
@@ -25,30 +25,32 @@ process interproscan{
   input:
     tuple val(x), path(genesfaa)
   output:
-    tuple val(x), path("*.ip.gff3"), emit: ipgff3
+    //tuple val(x), path("*.ip.gff3"), emit: ipgff3
+    tuple val(x), path("*ip.tsv"), emit: iptsv
   script:
   """
+  ls /opt/interproscan/data
   interproscan.sh -i ${genesfaa} \\
-  -f GFF3 \\
+  -f TSV \\
   -appl Pfam,TIGRFAM,PRINTS,ProSitePatterns,Gene3D \\
   -cpu 2 \\
-  -o ${x.id}.ip.gff3
+  -o ${x}.ip.tsv
   """
 }
 
 process sanntisgbk{
-  cpus '2'
-  time '10h'
+  cpus '1'
+  time '1h'
   container 'sysbiojfgg/sanntis:0.1'
 
   input:
   tuple val(x), path(fna), path(genesfaa)
   output:
-  tuple val(x), fpath("*.faa.gb"), emit: genebank
+  tuple val(x), path("*.faa.gb"), emit: gbk
   script:
   """
-  sanntis_build_gb -n ${fna}
-    -a ${genesfaa}
-    -o ${x.id}.faa.gb
+  sanntis_build_gb -n ${fna} \\
+    -a ${genesfaa} \\
+    -o ${x}.faa.gb
   """
 }
