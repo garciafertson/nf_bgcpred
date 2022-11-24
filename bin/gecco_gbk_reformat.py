@@ -12,8 +12,8 @@ def main( ):
 
     #outbed=".".join([args.name,"bed"])
     #print(args.name)
-    with open(args.tsv) as f, open(args.gbk, "r") as gb, open(args.name+"_sn.bed") as b, open(args.name+"_sn.fna") as fnaout:
-        record_dict=SeqIO.index(gb, "genbank")
+    with open(args.tsv,"r") as f, open(args.name+"_sn.bed", "w") as b, open(args.name+"_sn.fna","w") as fnaout:
+        record_dict=SeqIO.index(args.gbk, "genbank")
         next(f)
         for line in f:
             line=line.rstrip()

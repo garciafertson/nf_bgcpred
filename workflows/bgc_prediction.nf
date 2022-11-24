@@ -7,10 +7,12 @@ include {filterbysize}			from  "../modules/filter"
 include {filter_pfamgbk}		from 	"../modules/filter"
 include {splitbysize}				from	"../modules/filter"
 include {splitgbk}					from	"../modules/bgcgbk"
-include {deepbgc_prepare, deepbgc_detect, rungecco, runantismash, runsanntis}	from  "../modules/bgc"
-include {prodigal, interproscan, sanntisgbk}  from	"../modules/genepredict"
-include {bedops as bedops_sn, bedops as bedops_gc, bedops as bedops_dp}       from  "../modules/catalogue"
-include {parse_asresults, parse_snresults, parse_gcresults, parse_dpresults}  from "../modules/processbgc"
+include {deepbgc_prepare; deepbgc_detect; rungecco; runantismash; runsanntis}	from  "../modules/bgc"
+include {prodigal; interproscan; sanntisgbk}  from	"../modules/genepredict"
+include {bedops as bedops_sn; bedops as bedops_gc; bedops as bedops_dp; getbgc_fna}	from  "../modules/catalogue"
+include {fna2fnamash; mashtriangle; mcl_clust; fna_get_representatives; build_index}	from "../modules/catalogue"
+include {build_genomebed; prodigal_bgc; build_bedbgc}	from "../modules/catalogue"
+include {parse_asresults; parse_snresults; parse_gcresults; parse_dpresults}  from "../modules/processbgc"
 
 //run metagenomic assembly pipeline using megahit
 process modify_contigid_splitfas {
@@ -56,14 +58,14 @@ workflow BGCPRED {
 		sanntisinput.view()
 		runsanntis(sanntisinput)
 		gff_sn=runsanntis.out.gff
+		sn_parse=gff_sn.join(bysizecontigs)
+		parse_snresults(sn_parse)
+		bed_sn=parse_snresults.out.bed
+		fna_sn=parse_snresults.out.fna
+		//reformat sanntis gbk into AS bigscape
 
-		parse_snresults(gff_sn, bysizecontigs, gbk)
-    bed_sn=parse_snresults.out.bed
-    fna_sn=parse_snresults.out.fna
-    //reformat sanntis gbk into AS bigscape
-
-    bedops_sn(bed_as.join(bed_sn))
-    bed_1=bedops_sn.out.bed
+		bedops_sn(bed_as.join(bed_sn))
+		bed_1=bedops_sn.out.bed
   }
   else{
     bed_1=bed_as
@@ -74,10 +76,10 @@ workflow BGCPRED {
 		rungecco(bysizecontigs) //remove predictions on edges
 		gbk_gc=rungecco.out.gbk
 		tsv_gc=rungecco.out.tsv
-
-		parse_gcresults(gbk_gc, tsv_gc, bizecontigs)
+		gc_parse=gbk_gc.join(tsv_gc)
+		parse_gcresults(gc_parse)
     bed_gc=parse_gcresults.out.bed
-    fna_gc=parsegcresults.out.fna
+    fna_gc=parse_gcresults.out.fna
     //reformat gecco gbk into AS bigscape
 
     bedops_gc(bed_1.join(bed_gc))
@@ -95,10 +97,10 @@ workflow BGCPRED {
  		deepbgc_detect(gbk)
 		gbk_dp=deepbgc_detect.out.bgc_gbk
     tsv_dp=deepbgc_detect.out.tsv
-
-    parse_dpresults(tsv_dp, gbk_dp)
+    dp_parse=tsv_dp.join(gbk_dp)
+    parse_dpresults(dp_parse)
     bed_dp=parse_dpresults.out.bed
-    fna_dp=parse_dp_results.out.fna
+    fna_dp=parse_dpresults.out.fna
     //reformat into Antishmash format
 
     bedops_dp(bed_2.join(bed_dp))
@@ -115,18 +117,18 @@ workflow BGCPRED {
   bgc_fna=getbgc_fna.out.fna
 	//BUILD nucleotide BGCcatalogue,
   //concatenate all BGC_fna into one file
-  allbgc_fna=collectFile(name:"allbgc.fna")
+  allbgc_fna=bgc_fna.collectFile(name:"allbgc.fna")
   //convert fasta file into mash index
   fna2fnamash(allbgc_fna)
   mashfile=fna2fnamash.out.mash
   //get mash distance between sequences in fna file
-  fna_mashtriangle(mashfile)
-  fna_distances=fna_mashtirangle.out.list05
+  mashtriangle(mashfile)
+  fna_distances=mashtriangle.out.list05
   //derreplicate fna all samples, cluster all BGC
-  fna_mcl_clust(fna_distances)
-  clusters=fna_mcl_clust.out.clusters
+  mcl_clust(fna_distances)
+  clusters=mcl_clust.out.clusters
   //get representative longest sequence, return list of representative features
-  fna_get_representatives(bed_fna, clusters, all_bgcfna)
+  fna_get_representatives(bed_fna, clusters, allbgc_fna)
   bgc_catalogue_bed=fna_get_representatives.out.representative_bed
   bgc_catalogue_fna=fna_get_representatives.out.representative_fna
   //create bowtie index for derreplicated catalogue

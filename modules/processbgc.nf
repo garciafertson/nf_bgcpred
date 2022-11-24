@@ -15,7 +15,7 @@ process parse_asresults{
     """
     antismash_gbk_reformat.py \\
     --gbk $as_gbk \\
-    --name $x
+    --name ${x}
     """
 }
 
@@ -37,7 +37,7 @@ process parse_snresults{
     sanntis_gbk_reformat.py \\
     --gff ${gff_sn}\\
     --contigs ${contigs} \\
-    --name $x
+    --name ${x}
     """
 }
 
@@ -59,8 +59,7 @@ process parse_gcresults{
     gecco_gbk_reformat.py \\
     --gbk ${gbk} \\
     --tsv ${tsv} \\
-    --name ${name} \\
-    --contigs
+    --name ${x} 
     """
 }
 

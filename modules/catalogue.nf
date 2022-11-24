@@ -100,7 +100,7 @@ process mcl_clust{
 process fna_get_representatives{
   //directives
   publishDir "bgc_catalogue", mode: 'copy'
-  container "biopython/biopython"
+  container "biopython/biopython:latest"
   cpus 1
   time 4.h
 
@@ -109,8 +109,8 @@ process fna_get_representatives{
     path(clusters)
     path(fna)
   output:
-    path("*.representative.bed"), emit: repbed
-    path("*_representatives.fna"), emit: repfna
+    path("*.representative.bed"), emit: representative_bed
+    path("*_representatives.fna"), emit: representative_fna
   script:
     """
     get_representatives.py  --bedfile ${bed} \\
@@ -147,7 +147,7 @@ process build_genomebed{
 	cpus 1
 	time 1.h
 	//module "python3"
-	container "biopython/biopython"
+	container "biopython/biopython:latest"
 
 	input:
 	path(bed)
@@ -185,7 +185,7 @@ process build_bedbgc{
   cpus 1
   time 4.h
   //module "python3"
-  container "biopython/biopython"
+  container "biopython/biopython:latest"
 
   input:
   path(gff)
