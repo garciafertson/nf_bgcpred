@@ -2,7 +2,6 @@ process deepbgc_prepare{
   scratch=true
   cpus 2
   container 'quay.io/biocontainers/deepbgc:0.1.30--pyhca03a8a_2'
-  // publishDir "deepbgc/prepare"
   time   = { 20.h  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
@@ -34,17 +33,18 @@ process deepbgc_detect{
   input:
     tuple val(x), path(pfamgbk)
   output:
-    tuple val(x), path("${x}/*.bgc.gbk"), optional:true, emit: bgc_gbk
-    path("${x}/*.bgc.tsv"), optional:true, emit: tsv
-
+    tuple val(x), path("${x}_dp.gbk"), optional:true, emit: bgc_gbk
+    path("${x}_dp.tsv"), optional:true, emit: tsv
   script:
     """
     deepbgc pipeline \\
     	--output ${x} \\
       --label deepbgc \\
-      --score 0.9 \\
-      --min-proteins 2 \\
+      --score 0.925 \\
+      --min-proteins 4 \\
       ${pfamgbk}
+    mv ${x}/*.bgc.gbk ${x}_dp.gbk
+    mv ${x}/*.bgc.tsv ${x}_dp.tsv
     """
 }
 
@@ -62,8 +62,8 @@ process runantismash {
   input:
   tuple val(x), path(contigs)
   output:
-  tuple val(x), path("${x}/*.bgc.gbk"), optional: true, emit: gbk
-
+  tuple val(x), path("${x}/*.region???.gbk"), optional: true, emit: bgcgbk
+  tuple val(x), path("${x}_as.gbk"), optional: true, emit:gbk
   script:
   """
   antismash --cb-general \\
@@ -71,6 +71,8 @@ process runantismash {
   --asf \\
   --genefinding-tool prodigal-m \\
   ${contigs}
+  cat ${x}/*.region???.gbk > ${x}_as.gbk
+  # rename
   """
 }
 
@@ -86,8 +88,8 @@ process rungecco {
     input:
     tuple val(x), path(contigs)
     output:
-    tuple val(x), path("gecco_out/*.gbk"), optional: true, emit: gbk
-    tuple val(x), path("gecco_out/*.tsv"), optional: true, emit: tsv
+    tuple val(x), path("${x}.gc.gbk"), optional: true, emit: gbk
+    tuple val(x), path("*clusters.tsv"), optional: true, emit: tsv
     //recover and analize clusters.tsv snd create bed in relation to conitgs(genome) file
 
     script:
@@ -96,6 +98,8 @@ process rungecco {
     -o gecco_out \\
     --jobs $task.cpus \\
     --threshold 0.9
+    mv gecco_out/*clusters.tsv ${x}_clusters.tsv
+    cat gecco_out/*gbk > ${x}.gc.gbk
     """
 }
 
@@ -107,14 +111,13 @@ process runsanntis {
     container 'sysbiojfgg/sanntis:0.1'
     errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
     //valifExitStatus 0,1
-    publishDir "out/sanntis"
+    //publishDir "out/sanntis"
 
     input:
     tuple val(x), path(tsv), path(gbk)
     output:
-    tuple val(x), path("${x}*"), optional: true, emit: gff
+    tuple val(x), path("${x}sanntis/*ful.gff"), optional: true, emit: gff
     //recover and analize clusters.tsv snd create bed in relation to conitgs(genome) file
-
 
     """
     sanntis  \\
