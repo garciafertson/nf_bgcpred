@@ -36,7 +36,7 @@ workflow BGCPRED {
 	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
-	sizecontigs=longcontigs.splitFasta(size: "80.MB" ,file:true)
+	sizecontigs=longcontigs.splitFasta(size: "10.MB" ,file:true)
 	modify_contigid_splitfas(sizecontigs)
 	bysizecontigs=modify_contigid_splitfas.out.splitcontigs
 	// Split large contig file into ~100 MB files
