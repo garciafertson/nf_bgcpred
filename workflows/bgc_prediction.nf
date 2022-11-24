@@ -6,15 +6,11 @@ General workflow, Take contigs as input and output bgcprediction fasta/gbk
 include {filterbysize}			from  "../modules/filter"
 include {filter_pfamgbk}		from 	"../modules/filter"
 include {splitbysize}				from	"../modules/filter"
-include {deepbgc_prepare} 	from	"../modules/bgc"
-include	{deepbgc_detect}		from  "../modules/bgc"
 include {splitgbk}					from	"../modules/bgcgbk"
-include {runsanntis}				from  "../modules/bgc"
-include {runantismash}			from  "../modules/bgc"
-include {rungecco}					from  "../modules/bgc"
-include {prodigal}					from	"../modules/genepredict"
-include {interproscan}			from	"../modules/genepredict"
-include {sanntisgbk}				from	"../modules/genepredict"
+include {deepbgc_prepare, deepbgc_detect, rungecco, runantismash, runsanntis}	from  "../modules/bgc"
+include {prodigal, interproscan, sanntisgbk}  from	"../modules/genepredict"
+include {bedops as bedops_sn, bedops as bedops_gc, bedops as bedops_dp}       from  "../modules/catalogue"
+include {parse_asresults, parse_snresults, parse_gcresults, parse_dpresults}  from "../modules/processbgc"
 
 //run metagenomic assembly pipeline using megahit
 process modify_contigid_splitfas {
@@ -23,7 +19,7 @@ input:
 output:
   tuple val(split_name),  path(splitcontig), emit: splitcontigs
 script:
-  split_name=splitcontig.getName() 
+  split_name=splitcontig.getName()
 """
 echo ${split_name}
 """
@@ -42,12 +38,11 @@ workflow BGCPRED {
 	// Split large contig file into ~100 MB files
 	// Bedfiles chomosome name, start, end, feature name
 
-	if(params.antismash){
-		runantismash(bysizecontigs)
-		gbk_as=runantismash.out.gbk
-		//as2bed(gbk_as)
-		//bed_as=runantismash.out.bed
-	}
+	runantismash(bysizecontigs)
+	gbk_as=runantismash.out.gbk
+	parse_asresults(gbk_as)
+	bed_as=parse_asresults.out.bed
+  fna_as=parse_asresults.out.fna
 
 	if(params.sanntis){
 		prodigal(bysizecontigs)
@@ -61,67 +56,99 @@ workflow BGCPRED {
 		sanntisinput.view()
 		runsanntis(sanntisinput)
 		gff_sn=runsanntis.out.gff
-		
-		//runsanntis(bysizecontigs)
-		//bed_sn=runsanntis.out.bed
-		//fasta_sn=runsanntis.out.fasta //convert
-		//gff2gbk(gff_sn, fasta_sn)
-		//gbk_sn=gcf2gbk.out.gbk //convert into gbk and reformat for BigSCAPE
-		//bedops workflow, receive bedfiles with gbk names, and genbank files
-		// incremental addition of the next bgc predictors
-		//bedops(bed_as, bed_sn)
-	}
+
+		parse_snresults(gff_sn, bysizecontigs, gbk)
+    bed_sn=parse_snresults.out.bed
+    fna_sn=parse_snresults.out.fna
+    //reformat sanntis gbk into AS bigscape
+
+    bedops_sn(bed_as.join(bed_sn))
+    bed_1=bedops_sn.out.bed
+  }
+  else{
+    bed_1=bed_as
+  }
 
 	if(params.gecco){
 		//skash/gecco-0.6.3:latest
 		rungecco(bysizecontigs) //remove predictions on edges
-		gbk_g1=rungecco.out.gbk
+		gbk_gc=rungecco.out.gbk
 		tsv_gc=rungecco.out.tsv
-		//bgc_gc=
-		//reformatgbk(gbk_g1)
-		//gbk_gc=reformatgbk.out.gbk	//reformat for BiGSCAPE
-	}
+
+		parse_gcresults(gbk_gc, tsv_gc, bizecontigs)
+    bed_gc=parse_gcresults.out.bed
+    fna_gc=parsegcresults.out.fna
+    //reformat gecco gbk into AS bigscape
+
+    bedops_gc(bed_1.join(bed_gc))
+    bed_2=bedops_gc.out.bed
+  }
+  else{
+    bed_2=bed_1
+  }
 
 	if(params.deepbgc){
-	  	deepbgc_prepare(bysizecontigs)
+	  deepbgc_prepare(bysizecontigs)
 		contig_gbk=deepbgc_prepare.out.gbk
 		filter_pfamgbk(contig_gbk)
 		gbk=filter_pfamgbk.out.pf_gbk
  		deepbgc_detect(gbk)
-		pred_bgcgbk=deepbgc_detect.out.bgc_gbk
-		//reformat into Antishmash format
-		//reformatgbk(pred_bgcgbk)
-		//gbk_dp=regormatgbk.out.gbk
-	}
+		gbk_dp=deepbgc_detect.out.bgc_gbk
+    tsv_dp=deepbgc_detect.out.tsv
 
-	//transform into fasta, mash95, mcl
-	// prioritize AntismashOutput, longest sequence_length
-	// score different pipelines
-	// Build database
-	// Compare AS-sanntis -> AS(1), get intersection-predition tool table
-	// Compare AS(1)-gecco -> AS(2), get intersection
-	// Compare AS(2)-deepbgc -> AS(3), get intersection
-	//The comparison steps: Overlap between BGC prediction
-	// Options for finding the overlap:
-	// compare final predicted sequecnes and keep:
-	// 1 - all AS predictions
-	// 2 - only intersections with other predictiors >1
-	// 3 - only very high scoring predicions single predictor
+    parse_dpresults(tsv_dp, gbk_dp)
+    bed_dp=parse_dpresults.out.bed
+    fna_dp=parse_dp_results.out.fna
+    //reformat into Antishmash format
 
-	// convert gbk to fasta for each gbk in contig file,
-	// work with list of individual files gbk or fasta.
-	// mash distace each AS file with 2darybgc predictos
-	// mask location of BGC prediction in contig file with
-	// use bedtools create/identify features in contig file and
-	// ask for intersectoin, return intersection features,
+    bedops_dp(bed_2.join(bed_dp))
+    bed_3=bedops_dp.out.bed
+  }
+  else{
+    bed_3=bed_2
+  }
 
-	////Find overlap using bed files, use bedops and bedfiles
-	// Reference Genome are the contigs
-	// The features are the GBK start and end, use this info to include
-	// Create Bedfile from Predicted GBKs
-	// info prediction on contig edge
-	// Increase cutoff value for all predictors,
-	// Create genome bed file for contigs file
-	// P
-	//antismash(fnafilt)
+  //getfasta nucleotides  of BGCs from final beds
+  bed_fna=bed_3.join(bysizecontigs)
+  //get fna from bed keep sequence name identifier as in bed feature-genebank file
+  getbgc_fna(bed_fna)
+  bgc_fna=getbgc_fna.out.fna
+	//BUILD nucleotide BGCcatalogue,
+  //concatenate all BGC_fna into one file
+  allbgc_fna=collectFile(name:"allbgc.fna")
+  //convert fasta file into mash index
+  fna2fnamash(allbgc_fna)
+  mashfile=fna2fnamash.out.mash
+  //get mash distance between sequences in fna file
+  fna_mashtriangle(mashfile)
+  fna_distances=fna_mashtirangle.out.list05
+  //derreplicate fna all samples, cluster all BGC
+  fna_mcl_clust(fna_distances)
+  clusters=fna_mcl_clust.out.clusters
+  //get representative longest sequence, return list of representative features
+  fna_get_representatives(bed_fna, clusters, all_bgcfna)
+  bgc_catalogue_bed=fna_get_representatives.out.representative_bed
+  bgc_catalogue_fna=fna_get_representatives.out.representative_fna
+  //create bowtie index for derreplicated catalogue
+  build_index(bgc_catalogue_fna)
+  build_genomebed(bgc_catalogue_bed)
+
+  //create bedfile for predicted genes in final bgcs from catalogue (from prodigal or from genebank CDS features)
+  //input bgcfna run prodigal and predict genes, output genes
+  prodigal_bgc(allbgc_fna)
+  allbgc_genes=prodigal_bgc.out.gff
+  //input prodigal gff(gbk) and reformat into bed file.
+  build_bedbgc(allbgc_genes)
+
+  ////////////////////
+  //recover genebank files from representatives for bigscape
+  //antismash genebank ready for bigscape,
+  //gecco genebank, convert into AS format for bigscape
+  //deepbgc genbank, convert into AS format for bigscape
+  //sanntis, convert fna into genebank using prodigal and convert into AS format
+
+	//*** compare final predicted sequecnes and keep:
+	// Check 1 - all AS predictions
+	// * missing 2 - only intersections with other predictiors >1
+	// Check 3 - only very high scoring predicions single predictor
 }
