@@ -117,9 +117,10 @@ workflow BGCPRED {
   bed_fna=bed_final.join(bysizecontigs)
   //get fna from bed keep sequence name identifier as in bed feature-genebank file
   getbgc_fna(bed_fna)
-  bgc_fna=getbgc_fna.out.fna.collect()
+  bgc_fna=getbgc_fna.out.fna
 	//BUILD nucleotide BGCcatalogue,
   //concatenate all BGC_fna into one file
+  bgc_fna.view()
   allbgc_fna=bgc_fna.collectFile(name:"allbgc.fna")
   //convert fasta file into mash index
   fna2fnamash(allbgc_fna)

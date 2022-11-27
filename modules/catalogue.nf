@@ -62,7 +62,7 @@ process getbgc_fna{
   //scratch=true
   cpus 1
   container 'staphb/bedtools:2.30.0'
-  // publishDir "deepbgc/prepare"
+  publishDir "out/bgc_fna"
   time   = { 40.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
@@ -109,9 +109,9 @@ process mashtriangle{
     path("*_0.05.list"), emit: list05
   script:
       """
-      mash triangle -p 10 -E -d 0.3 -i $mashlist > ${mashlist}.edgelist
+      mash triangle -p 10 -E -d 0.3 -i $mashfile > ${mashfile}.edgelist
       awk '{if (\$3 < $params.mashdistance) print \$1,\$2,\$3}' \\
-      ${mashlist}.edgelist > ${mashlist}_0.05.list
+      ${mashfile}.edgelist > ${mashfile}_0.05.list
       """
 }
 
