@@ -9,7 +9,10 @@ include {splitbysize}				from	"../modules/filter"
 include {splitgbk}					from	"../modules/bgcgbk"
 include {deepbgc_prepare; deepbgc_detect; rungecco; runantismash; runsanntis}	from  "../modules/bgc"
 include {prodigal; interproscan; sanntisgbk}  from	"../modules/genepredict"
-include {bedops as bedops_sn; bedops as bedops_gc; bedops as bedops_dp; getbgc_fna}	from  "../modules/catalogue"
+include {bedops_sn}    from    "../modules/catalogue"  
+include {bedops_gc}    from    "../modules/catalogue"
+include {bedops_dp}    from    "../modules/catalogue" 
+include {getbgc_fna}	         from    "../modules/catalogue"  
 include {fna2fnamash; mashtriangle; mcl_clust; fna_get_representatives; build_index}	from "../modules/catalogue"
 include {build_genomebed; prodigal_bgc; build_bedbgc}	from "../modules/catalogue"
 include {parse_asresults; parse_snresults; parse_gcresults; parse_dpresults}  from "../modules/processbgc"
@@ -19,11 +22,12 @@ process modify_contigid_splitfas {
 input:
   tuple val(x), path(splitcontig)
 output:
-  tuple val(split_name),  path(splitcontig), emit: splitcontigs
+  tuple val(baseName),  path(splitcontig), emit: splitcontigs
 script:
   split_name=splitcontig.getName()
+  baseName = split_name.substring(0, split_name.lastIndexOf('.'))
 """
-echo ${split_name}
+echo ${baseName}
 """
 }
 
@@ -34,7 +38,7 @@ workflow BGCPRED {
 	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
 	longcontigs=filterbysize.out.contigs
-	sizecontigs=longcontigs.splitFasta(size: "10.MB" ,file:true)
+	sizecontigs=longcontigs.splitFasta(size: "6.MB" ,file:true)
 	modify_contigid_splitfas(sizecontigs)
 	bysizecontigs=modify_contigid_splitfas.out.splitcontigs
 	// Split large contig file into ~100 MB files
@@ -44,7 +48,7 @@ workflow BGCPRED {
 	gbk_as=runantismash.out.gbk
 	parse_asresults(gbk_as)
 	bed_as=parse_asresults.out.bed
-  fna_as=parse_asresults.out.fna
+	fna_as=parse_asresults.out.fna
 
 	if(params.sanntis){
 		prodigal(bysizecontigs)
@@ -55,21 +59,16 @@ workflow BGCPRED {
 		interproscan(genesfaa)
 		gff3=interproscan.out.iptsv
 		sanntisinput=gff3.join(gbk)
-		sanntisinput.view()
 		runsanntis(sanntisinput)
 		gff_sn=runsanntis.out.gff
 		sn_parse=gff_sn.join(bysizecontigs)
 		parse_snresults(sn_parse)
 		bed_sn=parse_snresults.out.bed
 		fna_sn=parse_snresults.out.fna
-		//reformat sanntis gbk into AS bigscape
-
-		bedops_sn(bed_as.join(bed_sn))
-		bed_1=bedops_sn.out.bed
-  }
-  else{
-    bed_1=bed_as
-  }
+ 	 }
+	else{
+		bed_sn=bed_as
+	}
 
 	if(params.gecco){
 		//skash/gecco-0.6.3:latest
@@ -78,16 +77,12 @@ workflow BGCPRED {
 		tsv_gc=rungecco.out.tsv
 		gc_parse=gbk_gc.join(tsv_gc)
 		parse_gcresults(gc_parse)
-    bed_gc=parse_gcresults.out.bed
-    fna_gc=parse_gcresults.out.fna
-    //reformat gecco gbk into AS bigscape
-
-    bedops_gc(bed_1.join(bed_gc))
-    bed_2=bedops_gc.out.bed
-  }
-  else{
-    bed_2=bed_1
-  }
+  		bed_gc=parse_gcresults.out.bed
+  		fna_gc=parse_gcresults.out.fna
+  	}
+ 	else{
+  		bed_gc=bed_as
+  	}
 
 	if(params.deepbgc){
 	  deepbgc_prepare(bysizecontigs)
@@ -96,25 +91,33 @@ workflow BGCPRED {
 		gbk=filter_pfamgbk.out.pf_gbk
  		deepbgc_detect(gbk)
 		gbk_dp=deepbgc_detect.out.bgc_gbk
-    tsv_dp=deepbgc_detect.out.tsv
-    dp_parse=tsv_dp.join(gbk_dp)
-    parse_dpresults(dp_parse)
-    bed_dp=parse_dpresults.out.bed
-    fna_dp=parse_dpresults.out.fna
-    //reformat into Antishmash format
+		tsv_dp=deepbgc_detect.out.tsv
+		dp_parse=tsv_dp.join(gbk_dp)
+		parse_dpresults(dp_parse)
+		bed_dp=parse_dpresults.out.bed
+		fna_dp=parse_dpresults.out.fna
+		//reformat into Antishmash format
+	}
+	else{
+		bed_dp=bed_as
+	}
+  bed_snin=bed_as.join(bed_sn)
+  bedops_sn(bed_snin)
+  bed_snout=bedops_sn.out.bed
+  bed_gcin=bed_snout.join(bed_gc)
 
-    bedops_dp(bed_2.join(bed_dp))
-    bed_3=bedops_dp.out.bed
-  }
-  else{
-    bed_3=bed_2
-  }
+  bedops_gc(bed_gcin)
+  bed_gcout=bedops_gc.out.bed
+  bed_dpin=bed_gcout.join(bed_dp)
+
+  bedops_dp(bed_dpin)
+  bed_final=bedops_dp.out.bed
 
   //getfasta nucleotides  of BGCs from final beds
-  bed_fna=bed_3.join(bysizecontigs)
+  bed_fna=bed_final.join(bysizecontigs)
   //get fna from bed keep sequence name identifier as in bed feature-genebank file
   getbgc_fna(bed_fna)
-  bgc_fna=getbgc_fna.out.fna
+  bgc_fna=getbgc_fna.out.fna.collect()
 	//BUILD nucleotide BGCcatalogue,
   //concatenate all BGC_fna into one file
   allbgc_fna=bgc_fna.collectFile(name:"allbgc.fna")
@@ -137,7 +140,7 @@ workflow BGCPRED {
 
   //create bedfile for predicted genes in final bgcs from catalogue (from prodigal or from genebank CDS features)
   //input bgcfna run prodigal and predict genes, output genes
-  prodigal_bgc(allbgc_fna)
+  prodigal_bgc(bgc_catalogue_fna)
   allbgc_genes=prodigal_bgc.out.gff
   //input prodigal gff(gbk) and reformat into bed file.
   build_bedbgc(allbgc_genes)

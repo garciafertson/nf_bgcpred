@@ -6,15 +6,15 @@ import argparse
 def main( ):
     parser=argparse.ArgumentParser()
     parser.add_argument("--gff", required=True, metavar='FILE')
-    parser.add_argument("--contigs")
+    parser.add_argument("--contigs", required=True, metavar='FILE')
     parser.add_argument("--name", required=True, metavar='FILE')
     args=parser.parse_args()
 
     #outbed=".".join([args.name,"bed"])
     #print(args.name)
 
-    with open(args.gff) as f, open(args.contigs, "r") as fn, open(args.name+"_sn.bed") as b, open(args.name+"_sn.fna") as fnaout :
-        record_dict=SeqIO.index(fn, "fasta")
+    with open(args.gff, "r") as f, open(args.name+"_sn.bed", "w") as b, open(args.name+"_sn.fna", "w") as fnaout :
+        record_dict=SeqIO.index(args.contigs, "fasta")
         i=1
         next(f)
         for line in f:
@@ -24,11 +24,11 @@ def main( ):
             end=line.split("\t")[4]
             feature=args.name+"_sanntis_"+str(i)
             i+=1
-            b.write("%s\t%s\t%\t%s\n" %(contig_name,start,end,feature))
+            b.write("%s\t%s\t%s\t%s\n" %(contig_name,start,end,feature))
             #extract sequence from prediction
             record=record_dict[contig_name]
             record.id=feature
-            record.seq=record.seq[int(start-1):int(end)]
+            record.seq=record.seq[(int(start)-1):int(end)]
             SeqIO.write(record,fnaout,"fasta")
 
 if __name__ == "__main__":

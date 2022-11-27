@@ -11,13 +11,13 @@ def main( ):
 
     #outbed=".".join([args.name,"bed"])
     #print(args.name)
-    with open(args.gbk, "r") as f, open(args.name+"_as.bed", "w") b, open(args.name+"_as.fna", "w") as fn:
+    with open(args.gbk, "r") as f, open(args.name+"_as.bed", "w") as b, open(args.name+"_as.fna", "w") as fn:
         i=1
         for record in SeqIO.parse(f,"genbank"):
             contig=record.description
-            start=record.annotations["structured_comment"]['antiSMASH-Data']['Orig. end']
+            start=record.annotations["structured_comment"]['antiSMASH-Data']['Orig. start']
             end=record.annotations["structured_comment"]['antiSMASH-Data']['Orig. end']
-            record.id=name+"-"+record.id+"_"+str(i)
+            record.id=args.name+"-"+record.id+"_"+str(i)
             record.description=""
             i+=1
             SeqIO.write(record, fn, "fasta")

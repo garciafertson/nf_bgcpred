@@ -9,7 +9,7 @@ process parse_asresults{
   input:
     tuple val(x), path(as_gbk)
   output:
-  tuple val(x), path("*_as.bed"), emit: bed, optional: true
+  tuple val(x), path("*_as.bed"), emit: bed
   tuple val(x), path("*_as.fna"), emit: fna, optional: true
   script:
     """
@@ -30,12 +30,12 @@ process parse_snresults{
   input:
     tuple val(x), path(gff_sn), path(contigs)
   output:
-  tuple val(x), path("*_sn.bed"), emit: bed, optional: true
+  tuple val(x), path("*_sn.bed"), emit: bed
   tuple val(x), path("*_sn.fna"), emit: fna, optional: true
   script:
     """
     sanntis_gbk_reformat.py \\
-    --gff ${gff_sn}\\
+    --gff ${gff_sn} \\
     --contigs ${contigs} \\
     --name ${x}
     """
@@ -52,8 +52,8 @@ process parse_gcresults{
   input:
     tuple val(x), path(gbk), path(tsv)
   output:
-    tuple val(x), path("*_bgc.bed"), emit: bed, optional: true
-    tuple val(x), path("*_bgc.fna"), emit: fna, optional: true
+    tuple val(x), path("*_gc.bed"), emit: bed
+    tuple val(x), path("*_gc.fna"), emit: fna, optional: true
   script:
     """
     gecco_gbk_reformat.py \\
@@ -74,8 +74,8 @@ process parse_dpresults{
   input:
     tuple val(x), path(dp_tsv), path(dp_gbk)
   output:
-    tuple val(x), path("*_bgc.bed"), emit: bed, optional: true
-    tuple val(x), path("*_bgc.fna"), emit: fna, optional: true
+    tuple val(x), path("*_dp.bed"), emit: bed
+    tuple val(x), path("*_dp.fna"), emit: fna, optional: true
   script:
     """
     deepbgc_gbk_reformat.py \\

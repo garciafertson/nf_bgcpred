@@ -34,7 +34,7 @@ process deepbgc_detect{
     tuple val(x), path(pfamgbk)
   output:
     tuple val(x), path("${x}_dp.gbk"), optional:true, emit: bgc_gbk
-    path("${x}_dp.tsv"), optional:true, emit: tsv
+    tuple val(x), path("${x}_dp.tsv"), optional:true, emit: tsv
   script:
     """
     deepbgc pipeline \\
@@ -43,8 +43,10 @@ process deepbgc_detect{
       --score 0.925 \\
       --min-proteins 4 \\
       ${pfamgbk}
-    mv ${x}/*.bgc.gbk ${x}_dp.gbk
-    mv ${x}/*.bgc.tsv ${x}_dp.tsv
+    touch ${x}/dummy.bgc.gbk
+    touch ${x}/dummy.bgc.tsv
+    cat ${x}/*.bgc.gbk > ${x}_dp.gbk
+    cat ${x}/*.bgc.tsv > ${x}_dp.tsv
     """
 }
 
@@ -71,6 +73,7 @@ process runantismash {
   --asf \\
   --genefinding-tool prodigal-m \\
   ${contigs}
+  touch ${x}/dummybgc.region000.gbk
   cat ${x}/*.region???.gbk > ${x}_as.gbk
   # rename
   """
@@ -82,13 +85,13 @@ process rungecco {
     time '10h'
     container 'skash/gecco-0.6.3:latest'
     errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
-    publishDir "out/gecco"
+    publishDir "out/gecco", mode: "copy", overwrite: true
     //validExitStatus 0,1
 
     input:
     tuple val(x), path(contigs)
     output:
-    tuple val(x), path("${x}.gc.gbk"), optional: true, emit: gbk
+    tuple val(x), path("${x}_gc.gbk"), optional: true, emit: gbk
     tuple val(x), path("*clusters.tsv"), optional: true, emit: tsv
     //recover and analize clusters.tsv snd create bed in relation to conitgs(genome) file
 
@@ -98,8 +101,10 @@ process rungecco {
     -o gecco_out \\
     --jobs $task.cpus \\
     --threshold 0.9
-    mv gecco_out/*clusters.tsv ${x}_clusters.tsv
-    cat gecco_out/*gbk > ${x}.gc.gbk
+    touch gecco_out/dummy.clusters.tsv
+    touch gecco_out/dummy.gbk
+    cat gecco_out/*clusters.tsv > ${x}_clusters.tsv
+    cat gecco_out/*gbk > ${x}_gc.gbk
     """
 }
 
@@ -111,12 +116,12 @@ process runsanntis {
     container 'sysbiojfgg/sanntis:0.1'
     errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
     //valifExitStatus 0,1
-    //publishDir "out/sanntis"
+    publishDir "out/sanntis"
 
     input:
     tuple val(x), path(tsv), path(gbk)
     output:
-    tuple val(x), path("${x}sanntis/*ful.gff"), optional: true, emit: gff
+    tuple val(x), path("${x}_sn.gff"), emit: gff
     //recover and analize clusters.tsv snd create bed in relation to conitgs(genome) file
 
     """
@@ -124,5 +129,7 @@ process runsanntis {
     --ip-file ${tsv} \\
     --antismash_output True \\
     ${gbk}
+    touch ${x}.faa.gb.sanntis/${x}.dummy.full.gff
+    cat ${x}*sanntis/${x}*full.gff > ${x}_sn.gff
     """
     }

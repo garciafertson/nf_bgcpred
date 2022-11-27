@@ -1,4 +1,4 @@
-process bedops{
+process bedops_dp{
   //scratch=true
   cpus 1
   container 'biocontainers/bedops:v2.4.35dfsg-1-deb_cv1'
@@ -10,11 +10,51 @@ process bedops{
   input:
     tuple val(x), path(bed_ref), path(bed_add)
   output:
-    tuple val(x), path("*_ext.bed"), emit: bed, optional: true
+    tuple val(x), path("${x}_jdp.bed"), emit: bed
   script:
     """
     bedops --not-element-of 20% ${bed_add} ${bed_ref} > ${x}new.bed
-    cat ${bed_ref} ${x}new.bed > ${x}_ext.bed
+    cat ${bed_ref} ${x}new.bed > ${x}_jdp.bed
+    """
+}
+
+process bedops_gc{
+  //scratch=true
+  cpus 1
+  container 'biocontainers/bedops:v2.4.35dfsg-1-deb_cv1'
+  // publishDir "deepbgc/prepare"
+  time   = { 20.m  * task.attempt }
+  errorStrategy = 'retry'
+  maxRetries = 2
+
+  input:
+    tuple val(x), path(bed_ref), path(bed_add)
+  output:
+    tuple val(x), path("${x}_jgc.bed"), emit: bed
+  script:
+    """
+    bedops --not-element-of 20% ${bed_add} ${bed_ref} > ${x}new.bed
+    cat ${bed_ref} ${x}new.bed > ${x}_jgc.bed
+    """
+}
+
+process bedops_sn{
+  //scratch=true
+  cpus 1
+  container 'biocontainers/bedops:v2.4.35dfsg-1-deb_cv1'
+  // publishDir "deepbgc/prepare"
+  time   = { 20.m  * task.attempt }
+  errorStrategy = 'retry'
+  maxRetries = 2
+
+  input:
+    tuple val(x), path(bed_ref), path(bed_add)
+  output:
+    tuple val(x), path("${x}_jsn.bed"), emit: bed
+  script:
+    """
+    bedops --not-element-of 20% ${bed_add} ${bed_ref} > ${x}new.bed
+    cat ${bed_ref} ${x}new.bed > ${x}_jsn.bed
     """
 }
 
@@ -30,10 +70,10 @@ process getbgc_fna{
   input:
     tuple val(x), path(bgcbed), path(contigs)
   output:
-    tuple val(x), path("*_ext.bed"), emit: fna, optional: true
+    path("*_bgc.fna"), emit: fna
   script:
     """
-    bedtools getfasta -fi ${contigs} -bed ${bgcbed} -name > ${x}_bgc.fna
+    bedtools getfasta -fi ${contigs} -bed ${bgcbed} -nameOnly > ${x}_bgc.fna
     """
 }
 
