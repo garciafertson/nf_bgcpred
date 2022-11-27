@@ -17,7 +17,7 @@ def main( ):
             contig=record.description
             start=record.annotations["structured_comment"]['antiSMASH-Data']['Orig. start']
             end=record.annotations["structured_comment"]['antiSMASH-Data']['Orig. end']
-            record.id=args.name+"-"+record.id+"_"+str(i)
+            record.id="as|" + args.name+"-"+record.id+"_"+str(i)
             record.description=""
             i+=1
             SeqIO.write(record, fn, "fasta")

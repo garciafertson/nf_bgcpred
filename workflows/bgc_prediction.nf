@@ -12,8 +12,8 @@ include {prodigal; interproscan; sanntisgbk}  from	"../modules/genepredict"
 include {bedops_sn}    from    "../modules/catalogue"  
 include {bedops_gc}    from    "../modules/catalogue"
 include {bedops_dp}    from    "../modules/catalogue" 
-include {getbgc_fna}	         from    "../modules/catalogue"  
-include {fna2fnamash; mashtriangle; mcl_clust; fna_get_representatives; build_index}	from "../modules/catalogue"
+include {getbgc_fna; getbgc_bed}	         from    "../modules/catalogue"  
+include { mashtriangle; mcl_clust; fna_get_representatives; build_index}	from "../modules/catalogue"
 include {build_genomebed; prodigal_bgc; build_bedbgc}	from "../modules/catalogue"
 include {parse_asresults; parse_snresults; parse_gcresults; parse_dpresults}  from "../modules/processbgc"
 
@@ -118,27 +118,30 @@ workflow BGCPRED {
   //get fna from bed keep sequence name identifier as in bed feature-genebank file
   getbgc_fna(bed_fna)
   bgc_fna=getbgc_fna.out.fna
-	//BUILD nucleotide BGCcatalogue,
+  //BUILD nucleotide BGCcatalogue,
   //concatenate all BGC_fna into one file
   bgc_fna.view()
   allbgc_fna=bgc_fna.collectFile(name:"allbgc.fna")
-  //convert fasta file into mash index
-  fna2fnamash(allbgc_fna)
-  mashfile=fna2fnamash.out.mash
+  
   //get mash distance between sequences in fna file
-  mashtriangle(mashfile)
+  mashtriangle(allbgc_fna)
   fna_distances=mashtriangle.out.list05
+  
   //derreplicate fna all samples, cluster all BGC
   mcl_clust(fna_distances)
   clusters=mcl_clust.out.clusters
   //get representative longest sequence, return list of representative features
-  fna_get_representatives(bed_fna, clusters, allbgc_fna)
+
+  getbgc_bed(bed_final)
+  allbgc_bed=getbgc_bed.out.bed.collectFile(name:"allbgc.bed")
+
+  fna_get_representatives(allbgc_bed, clusters, allbgc_fna)
   bgc_catalogue_bed=fna_get_representatives.out.representative_bed
   bgc_catalogue_fna=fna_get_representatives.out.representative_fna
   //create bowtie index for derreplicated catalogue
   build_index(bgc_catalogue_fna)
   build_genomebed(bgc_catalogue_bed)
-
+  
   //create bedfile for predicted genes in final bgcs from catalogue (from prodigal or from genebank CDS features)
   //input bgcfna run prodigal and predict genes, output genes
   prodigal_bgc(bgc_catalogue_fna)

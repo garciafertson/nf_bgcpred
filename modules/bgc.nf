@@ -40,7 +40,7 @@ process deepbgc_detect{
     deepbgc pipeline \\
     	--output ${x} \\
       --label deepbgc \\
-      --score 0.925 \\
+      --score 0.95 \\
       --min-proteins 4 \\
       ${pfamgbk}
     touch ${x}/dummy.bgc.gbk
@@ -100,7 +100,7 @@ process rungecco {
     gecco run --genome ${contigs} \\
     -o gecco_out \\
     --jobs $task.cpus \\
-    --threshold 0.9
+    --threshold 0.95
     touch gecco_out/dummy.clusters.tsv
     touch gecco_out/dummy.gbk
     cat gecco_out/*clusters.tsv > ${x}_clusters.tsv

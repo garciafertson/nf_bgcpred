@@ -21,7 +21,7 @@ def main( ):
                 contig_name=line.split("\t")[0]
                 start=line.split("\t")[5]
                 end=line.split("\t")[6]
-                feature=line.split("\t")[4]
+                feature="dp|"+line.split("\t")[4]
                 record=record_dict[feature]
                 b.write("%s\t%s\t%s\t%s\n" %(contig_name,start,end,feature))
                 #extract sequence from prediction

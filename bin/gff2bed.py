@@ -9,16 +9,16 @@ def main( ):
 
     #outbed=".".join([args.name,"bed"])
     #print(args.name)
-    with open(args.input_gbk, "r") as f, open(args.name+".bed", "w") as o:
+    with open(args.gff, "r") as f, open(args.name+".bed", "w") as o:
         for line in f:
             line=line.rstrip()
             if line.startswith("#"):
-                next()
+                continue
             else:
                 bgcid=line.split("\t")[0]
-                start=line.split("\t")[2]
-                end=line.split("\t")[3]
-                strand=line.split("\t")[5]
+                start=line.split("\t")[3]
+                end=line.split("\t")[4]
+                strand=line.split("\t")[6]
                 geneid="_".join([bgcid,start,end,strand])
                 o.write("%s\t%s\t%s\t%s\n" %(bgcid, start, end, geneid))
 

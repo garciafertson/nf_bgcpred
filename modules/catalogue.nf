@@ -62,7 +62,7 @@ process getbgc_fna{
   //scratch=true
   cpus 1
   container 'staphb/bedtools:2.30.0'
-  publishDir "out/bgc_fna"
+  publishDir "out/allbgc_fna"
   time   = { 40.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
@@ -77,28 +77,27 @@ process getbgc_fna{
     """
 }
 
-process fna2fnamash{
-  //directives
-  container "staphb/mash:2.3"
+process getbgc_bed{
+  //scratch=true
   cpus 1
-  time 2.h
+  time   = { 40.m  * task.attempt }
+  errorStrategy = 'retry'
+  maxRetries = 2
 
   input:
-    path(fna)
+    tuple val(x), path(bgcbed)
   output:
-    path("*.msh"), emit: mash
+    path("*_bgc.bed"), emit: bed
   script:
-    simplename=fna.getSimpleName()
     """
-    mash sketch -o $simplename $fna
+    cat ${bgcbed} > ${x}_bgc.bed
     """
 }
 
+
 process mashtriangle{
   //directives
-  //module "bioinfo-tools:mash"
-  container "staphb/mash"
-  publishDir "bgc_catalogue/tmp_mashtriangle"
+  container "staphb/mash:2.3"
   cpus 10
   time 24.h
 
@@ -119,7 +118,7 @@ process mcl_clust{
   //directives
   //module "mcl"
   container "sysbiojfgg/mcl:v0.1"
-  publishDir "bgc_catalogue/tmp_mashtriangle"
+  publishDir "out/bgc_catalogue", mode:'copy'
   cpus 4
   time 5.h
 
@@ -139,7 +138,7 @@ process mcl_clust{
 
 process fna_get_representatives{
   //directives
-  publishDir "bgc_catalogue", mode: 'copy'
+  publishDir "out/bgc_catalogue", mode: 'copy'
   container "biopython/biopython:latest"
   cpus 1
   time 4.h
@@ -149,8 +148,8 @@ process fna_get_representatives{
     path(clusters)
     path(fna)
   output:
-    path("*.representative.bed"), emit: representative_bed
-    path("*_representatives.fna"), emit: representative_fna
+    path("*representative.bed"), emit: representative_bed
+    path("*representative.fna"), emit: representative_fna
   script:
     """
     get_representatives.py  --bedfile ${bed} \\
@@ -208,13 +207,13 @@ process prodigal_bgc{
   input:
   path(fna)
   output:
-  path("representative_fnabgc.gff"), emit: gff
+  path("representative_bgc.gff"), emit: gff
   script:
     """
     prodigal \\
     -i ${fna} \\
     -c -f gff \\
-    -o fnabgc.gff \\
+    -o representative_bgc.gff \\
     -p meta
     """
 }
