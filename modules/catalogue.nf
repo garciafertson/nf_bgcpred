@@ -2,7 +2,6 @@ process bedops_dp{
   //scratch=true
   cpus 1
   container 'biocontainers/bedops:v2.4.35dfsg-1-deb_cv1'
-  // publishDir "deepbgc/prepare"
   time   = { 20.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
@@ -22,7 +21,6 @@ process bedops_gc{
   //scratch=true
   cpus 1
   container 'biocontainers/bedops:v2.4.35dfsg-1-deb_cv1'
-  // publishDir "deepbgc/prepare"
   time   = { 20.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
@@ -42,7 +40,6 @@ process bedops_sn{
   //scratch=true
   cpus 1
   container 'biocontainers/bedops:v2.4.35dfsg-1-deb_cv1'
-  // publishDir "deepbgc/prepare"
   time   = { 20.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
@@ -62,7 +59,7 @@ process getbgc_fna{
   //scratch=true
   cpus 1
   container 'staphb/bedtools:2.30.0'
-  publishDir "out/allbgc_fna"
+  publishDir "out/allbgc", mode:"copy", overwrite:true
   time   = { 40.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
@@ -83,6 +80,7 @@ process getbgc_bed{
   time   = { 40.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
+  publishDir "out/allbgc", mode:"copy", overwrite:true
 
   input:
     tuple val(x), path(bgcbed)
@@ -118,7 +116,7 @@ process mcl_clust{
   //directives
   //module "mcl"
   container "sysbiojfgg/mcl:v0.1"
-  publishDir "out/bgc_catalogue", mode:'copy'
+  publishDir "out/bgc_catalogue", mode:'copy', overwrite:true
   cpus 4
   time 5.h
 
@@ -138,7 +136,7 @@ process mcl_clust{
 
 process fna_get_representatives{
   //directives
-  publishDir "out/bgc_catalogue", mode: 'copy'
+  publishDir "out/bgc_catalogue", mode: 'copy', overwrite:true
   container "biopython/biopython:latest"
   cpus 1
   time 4.h
@@ -161,7 +159,7 @@ process fna_get_representatives{
 process build_index{
   //directives for uppmax rackham
   publishDir "out/bgc_catalogue",
-  mode: "copy"
+  mode: "copy", overwrite:true
   //conda "bioconda::bowtie2"
   container "biocontainers/bowtie2:v2.4.1_cv1"
   cpus params.mashcores
@@ -182,7 +180,7 @@ process build_index{
 process build_genomebed{
 	//directives
 	publishDir "out/bgc_catalogue",
-		mode: "copy"
+		mode: "copy", overwrite:true
 	cpus 1
 	time 1.h
 	//module "python3"
@@ -220,7 +218,7 @@ process prodigal_bgc{
 
 process build_bedbgc{
   publishDir "out/bgc_catalogue",
-    mode: "copy"
+    mode: "copy", overwrite:true
   cpus 1
   time 4.h
   //module "python3"

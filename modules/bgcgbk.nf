@@ -2,7 +2,7 @@ process splitgbk{
   scratch=true
   cpus 1
   time '10m'
-  publishDir "deepbgc_split"
+ // publishDir "deepbgc_split"
 
   input:
     tuple val(x), path(gbk)

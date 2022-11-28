@@ -26,7 +26,7 @@ process deepbgc_detect{
   cpus 1
   time '2h'
   container 'quay.io/biocontainers/deepbgc:0.1.30--pyhca03a8a_2'
-  publishDir "out/deepbgc"
+  publishDir "out/deepbgc", mode:"copy", overwrite: true
   errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
   //validExitStatus 0,1
 
@@ -116,7 +116,7 @@ process runsanntis {
     container 'sysbiojfgg/sanntis:0.1'
     errorStrategy {task.exitStatus in 1 ? 'ignore': 'terminate'}
     //valifExitStatus 0,1
-    publishDir "out/sanntis"
+    publishDir "out/sanntis", mode:"copy", overwrite:true
 
     input:
     tuple val(x), path(tsv), path(gbk)

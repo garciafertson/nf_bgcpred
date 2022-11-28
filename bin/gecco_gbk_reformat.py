@@ -22,7 +22,9 @@ def main( ):
                 start=line.split("\t")[2]
                 end=line.split("\t")[3]
                 feature=line.split("\t")[1]
-                record="gc|"+record_dict[feature]
+                record=record_dict[feature]
+                feature="|".join(["gc",feature])
+                record.id=feature
                 b.write("%s\t%s\t%s\t%s\n" %(contig_name,start,end,feature))
                 #extract sequence from prediction
                 SeqIO.write(record,fnaout,"fasta")
