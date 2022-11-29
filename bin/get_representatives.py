@@ -34,7 +34,13 @@ def main():
         for line in f:
             line=line.rstrip()
             bgcincl=set(line.split("\t"))
+            bgcincl_cp=set(line.split("\t"))
             incluster_bgc.update(bgcincl) #incluster_bgc.update(bgcincl)
+            if "as|" in line:
+                for b in bgcincl:
+                    if not ("as|" in b):
+                        bgcincl_cp.remove(b)
+            bgcincl=bgcincl_cp
             rep=bed.loc[bgcincl,"len"].idxmax()
             representative_bgc.add(rep)
 

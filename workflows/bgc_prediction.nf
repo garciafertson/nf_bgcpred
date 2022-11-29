@@ -3,9 +3,8 @@ General workflow, Take contigs as input and output bgcprediction fasta/gbk
 */
 
 //import modules
-include {filterbysize}			from  "../modules/filter"
-include {filter_pfamgbk}		from 	"../modules/filter"
-include {splitbysize}				from	"../modules/filter"
+include {filterbysize}					from  "../modules/filter"
+include {filter_pfamgbk; formatcontigid}		from 	"../modules/filter"
 include {splitgbk}					from	"../modules/bgcgbk"
 include {deepbgc_prepare; deepbgc_detect; rungecco; runantismash; runsanntis}	from  "../modules/bgc"
 include {prodigal; interproscan; sanntisgbk}  from	"../modules/genepredict"
@@ -37,8 +36,10 @@ workflow BGCPRED {
 	folder=params.contig_folder
 	fasta=Channel.fromPath(["${folder}/*contigs.fa", "${folder}/*.fasta", "${folder}/*.fna"])
 	filterbysize(fasta)
-	longcontigs=filterbysize.out.contigs
-	sizecontigs=longcontigs.splitFasta(size: "6.MB" ,file:true)
+	filtlongcontigs=filterbysize.out.contigs
+        formatcontigid(filtlongcontigs)
+	longcontigs=formatcontigid.out.contigs
+	sizecontigs=longcontigs.splitFasta(size: "60.MB" ,file:true)
 	modify_contigid_splitfas(sizecontigs)
 	bysizecontigs=modify_contigid_splitfas.out.splitcontigs
 	// Split large contig file into ~100 MB files

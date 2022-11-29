@@ -11,7 +11,7 @@ process filterbysize{
   input:
     path(fasta)
   output:
-    tuple val(samp_name), path ("${samp_name}.fna") , emit: contigs
+    tuple val(samp_name), path ("${samp_name}.fas") , emit: contigs
 
   script:
   samp_name=fasta.getSimpleName()
@@ -24,7 +24,7 @@ process filterbysize{
   seqkit replace \\
   --pattern '(^)' \\
   --replacement '${samp_name}_' \\
-  ${samp_name}.filtzise.fna > ${samp_name}.fna
+  ${samp_name}.filtzise.fna > ${samp_name}.fas
 
   """
 }
@@ -53,9 +53,9 @@ process filter_pfamgbk{
 
 //The module takes a contig file, checks the file size and divides
 //it by 70MB, returns the estimated number of files.
-process splitbysize{
+process formatcontigid{
   //set directives
-  container 'quay.io/biocontainers/pyfasta:0.5.2--py_1'
+  container "biopython/biopython:latest"
   scratch true
   cpus '1'
   time '15m'
@@ -63,19 +63,12 @@ process splitbysize{
   input:
   tuple val(x), path(contigs)
   output:
-  tuple val(x),path("*.fasta"), emit: contigs
+  tuple val(x),path("*.fna"), emit: contigs
 
   script:
   """
-  filename=${contigs}
-  filesize=\$(stat -c%s "\$filename")
-  float=calc \$filesize/10000000
-  int=\${float%.*}
-  if ((int > 1));
-    then
-    pyfasta split -n \$int ${contigs}
-    else
-    cat ${contigs} > ${x}.1.fasta
-  fi
+  reformat_contigid.py \\
+  --name ${x} \\
+  --fna	${contigs}
   """
 }

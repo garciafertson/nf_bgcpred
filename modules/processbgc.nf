@@ -5,6 +5,7 @@ process parse_asresults{
   time   = { 20.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
+  publishDir "out/antismash", mode:"copy"
 
   input:
     tuple val(x), path(as_gbk)
@@ -26,6 +27,7 @@ process parse_snresults{
   time   = { 20.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
+  publishDir "out/sanntis", mode:"copy"
 
   input:
     tuple val(x), path(gff_sn), path(contigs)
@@ -48,6 +50,7 @@ process parse_gcresults{
   time   = { 20.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
+  publishDir "out/gecco", mode:"copy"
 
   input:
     tuple val(x), path(gbk), path(tsv)
@@ -70,6 +73,7 @@ process parse_dpresults{
   time   = { 20.m  * task.attempt }
   errorStrategy = 'retry'
   maxRetries = 2
+  publishDir "out/deepbgc", mode:"copy"
 
   input:
     tuple val(x), path(dp_tsv), path(dp_gbk)

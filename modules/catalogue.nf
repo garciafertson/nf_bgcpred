@@ -12,7 +12,9 @@ process bedops_dp{
     tuple val(x), path("${x}_jdp.bed"), emit: bed
   script:
     """
-    bedops --not-element-of 20% ${bed_add} ${bed_ref} > ${x}new.bed
+    sort ${bed_add} > add
+    sort ${bed_ref} > ref
+    bedops --not-element-of 20% add ref > ${x}new.bed
     cat ${bed_ref} ${x}new.bed > ${x}_jdp.bed
     """
 }
@@ -31,7 +33,9 @@ process bedops_gc{
     tuple val(x), path("${x}_jgc.bed"), emit: bed
   script:
     """
-    bedops --not-element-of 20% ${bed_add} ${bed_ref} > ${x}new.bed
+    sort ${bed_add} > add
+    sort ${bed_ref} > ref
+    bedops --not-element-of 20% add ref > ${x}new.bed
     cat ${bed_ref} ${x}new.bed > ${x}_jgc.bed
     """
 }
@@ -50,7 +54,9 @@ process bedops_sn{
     tuple val(x), path("${x}_jsn.bed"), emit: bed
   script:
     """
-    bedops --not-element-of 20% ${bed_add} ${bed_ref} > ${x}new.bed
+    sort ${bed_add} > add
+    sort ${bed_ref} > ref
+    bedops --not-element-of 20% add ref > ${x}new.bed
     cat ${bed_ref} ${x}new.bed > ${x}_jsn.bed
     """
 }
