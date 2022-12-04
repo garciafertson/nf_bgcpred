@@ -18,8 +18,8 @@ process prodigal {
 }
 
 process interproscan{
-  cpus '2'
-  time '10h'
+  cpus '3'
+  time '15h'
   container 'interpro/interproscan:5.51-85.0'
 
   input:
@@ -33,7 +33,7 @@ process interproscan{
   interproscan.sh -i ${genesfaa} \\
   -f TSV \\
   -appl Pfam,TIGRFAM,PRINTS,ProSitePatterns,Gene3D \\
-  -cpu 2 \\
+  -cpu 6 \\
   -o ${x}.ip.tsv
   """
 }

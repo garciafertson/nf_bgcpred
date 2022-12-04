@@ -13,6 +13,7 @@ def main( ):
     with open(args.name+".fna","w") as fnaout:
         records=SeqIO.parse(args.fna, "fasta")
         for record in records:
+            record.id=record.id.split(" ")[0]
             record.id= re.sub('\.[0-9]+$', '', record.id)
             fnaout.write(">%s\n%s\n" %(record.id, record.seq) )
 

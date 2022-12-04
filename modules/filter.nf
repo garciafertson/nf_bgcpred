@@ -18,7 +18,7 @@ process filterbysize{
 
   """
   seqkit seq \\
-  --min-len 5000  \\
+  --min-len 20000  \\
   ${fasta} > ${samp_name}.filtzise.fna
 
   seqkit replace \\

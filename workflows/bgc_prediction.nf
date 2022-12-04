@@ -39,7 +39,7 @@ workflow BGCPRED {
 	filtlongcontigs=filterbysize.out.contigs
         formatcontigid(filtlongcontigs)
 	longcontigs=formatcontigid.out.contigs
-	sizecontigs=longcontigs.splitFasta(size: "60.MB" ,file:true)
+	sizecontigs=longcontigs.splitFasta(size: "50.MB" ,file:true)
 	modify_contigid_splitfas(sizecontigs)
 	bysizecontigs=modify_contigid_splitfas.out.splitcontigs
 	// Split large contig file into ~100 MB files
